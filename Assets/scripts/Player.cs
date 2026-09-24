@@ -1,18 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [SerializeField] private Transform player;
+    [SerializeField] private Rigidbody2D rig;
+    [SerializeField] private float jumpForce;
+    [SerializeField] private bool onGround;
+
+
     void Start()
     {
-        
+        rig = GetComponent<Rigidbody2D>();
+        onGround = true;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        if(Input.GetKeyDown(KeyCode.Space) && onGround)
+        {
+            print("jump");
+            rig.velocity = new UnityEngine.Vector2(rig.velocity.x, jumpForce);
+            
+        }   
     }
 }
