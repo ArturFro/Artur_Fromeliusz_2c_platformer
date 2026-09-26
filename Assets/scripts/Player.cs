@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
-using Unity.VisualScripting;
+
+
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -13,6 +13,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Collider2D groundCol;
     [SerializeField] private float horizontalInput;
     [SerializeField] private float moveSpeed;
+    [SerializeField] private Vector2 tempData;
 
 
     void Start()
@@ -25,8 +26,8 @@ public class Player : MonoBehaviour
     {
         if(Input.GetKeyDown(KeyCode.Space) && onGround)
         {
-            
-            rig.velocity = new UnityEngine.Vector2(rig.velocity.x, jumpForce);
+            tempData.Set(rig.velocity.x, jumpForce);
+            rig.velocity = tempData;
             onGround = false;  
             
         }   
@@ -43,7 +44,8 @@ public class Player : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        rig.velocity = new UnityEngine.Vector2(horizontalInput * moveSpeed, rig.velocity.y);
+        tempData.Set(horizontalInput * moveSpeed, rig.velocity.y);
+        rig.velocity = tempData;
     }
 
 
