@@ -14,6 +14,12 @@ public class Player : MonoBehaviour
     [SerializeField] private float horizontalInput;
     [SerializeField] private float moveSpeed;
     [SerializeField] private Vector2 tempData;
+    [SerializeField] private KeyCode dashKey;
+    [SerializeField] private KeyCode jumpKey;
+    [SerializeField] private float dashPower;
+    [SerializeField] private bool duringDash;
+    [SerializeField] private AnimationCurve curve;
+    [SerializeField] private float animTimer;
 
 
     void Start()
@@ -24,13 +30,34 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Space) && onGround)
+        if(Input.GetKeyDown(jumpKey) && onGround)
         {
             tempData.Set(rig.velocity.x, jumpForce);
             rig.velocity = tempData;
-            onGround = false;  
+            onGround = false;
+          
             
-        }   
+        }  
+
+        if(duringDash == true)
+        {
+            animTimer += Time.deltaTime;
+            rig.velocity = new Vector2(curve.Evaluate(animTimer) * dashPower * Time.deltaTime, 0);
+            if(animTimer >= 1)
+            {
+                duringDash = false;
+                animTimer = 0;
+            }
+        }
+
+        if(Input.GetAxis("Horizontal") != 0)
+        {
+
+            if(Input.GetKeyDown(dashKey))
+            {
+                Dash();    
+            }
+        } 
 
         horizontalInput = Input.GetAxis("Horizontal");
     }
@@ -44,9 +71,19 @@ public class Player : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        tempData.Set(horizontalInput * moveSpeed, rig.velocity.y);
-        rig.velocity = tempData;
+        
+        if(duringDash == false)
+        {
+            tempData.Set(horizontalInput * moveSpeed, rig.velocity.y);
+            rig.velocity = tempData;
+        }
     }
 
-
+    private void Dash()
+    {
+        print("dash");
+        duringDash = true;
+        //rig.AddForce(new Vector2(Input.GetAxis("Horizontal") * dashPower, 0));
+        
+    }
 }
