@@ -1,78 +1,61 @@
-using System.Collections;
-using System.Collections.Generic;
-
-
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] private GameObject player;
+    [Header("References")]
     [SerializeField] private Rigidbody2D rig;
-    [SerializeField] private float jumpForce;
-    [SerializeField] private bool onGround;
-    [SerializeField] private Collider2D groundCol;
+
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float horizontalInput;
-    [SerializeField] private float moveSpeed;
-    [SerializeField] private Vector2 tempData;
-    [SerializeField] private KeyCode dashKey;
-    [SerializeField] private KeyCode jumpKey;
-    [SerializeField] private float dashPower;
-    [SerializeField] private bool duringDash;
+
+    [Header("Jump")]
+    [SerializeField] private float jumpForce = 8f;
+    [SerializeField] private bool onGround;
+    [SerializeField] private KeyCode jumpKey = KeyCode.Space;
+
+    [Header("Dash")]
+    [SerializeField] private KeyCode dashKey = KeyCode.LeftShift;
+    [SerializeField] private float dashPower = 15f;
+    [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private AnimationCurve curve;
+    [SerializeField] private bool duringDash;
     [SerializeField] private float animTimer;
+  
 
+    private Vector2 tempData;
+    private float dashDirection;
 
-    void Start()
+    private void Start()
     {
         rig = GetComponent<Rigidbody2D>();
-        onGround = true;
     }
 
-    void Update()
+    private void Update()
     {
-        if(Input.GetKeyDown(jumpKey) && onGround)
+        horizontalInput = Input.GetAxisRaw("Horizontal");
+
+        if (Input.GetKeyDown(jumpKey) && onGround && !duringDash)
         {
             tempData.Set(rig.velocity.x, jumpForce);
             rig.velocity = tempData;
             onGround = false;
-          
-            
-        }  
-
-        if(duringDash == true)
-        {
-            animTimer += Time.deltaTime;
-            rig.velocity = new Vector2(curve.Evaluate(animTimer) * dashPower * Time.deltaTime, 0);
-            if(animTimer >= 1)
-            {
-                duringDash = false;
-                animTimer = 0;
-            }
         }
 
-        if(Input.GetAxis("Horizontal") != 0)
+        
+        if (Input.GetKeyDown(dashKey) && horizontalInput != 0f && !duringDash)
         {
-
-            if(Input.GetKeyDown(dashKey))
-            {
-                Dash();    
-            }
-        } 
-
-        horizontalInput = Input.GetAxis("Horizontal");
-    }
-
-    private void OnCollisionEnter2D(Collision2D player)
-    {
-        if(player.gameObject.CompareTag("Ground"))
-        {
-            onGround = true;
+            Dash();
         }
     }
+
     private void FixedUpdate()
     {
-        
-        if(duringDash == false)
+        if (duringDash)
+        {
+            UpdateDash();
+        }
+        else
         {
             tempData.Set(horizontalInput * moveSpeed, rig.velocity.y);
             rig.velocity = tempData;
@@ -81,9 +64,38 @@ public class Player : MonoBehaviour
 
     private void Dash()
     {
-        print("dash");
         duringDash = true;
-        //rig.AddForce(new Vector2(Input.GetAxis("Horizontal") * dashPower, 0));
-        
+        animTimer = 0f;
+
+        // Zapisujemy wy³¹cznie kierunek:
+        // 1 oznacza prawo, a -1 oznacza lewo.
+        dashDirection = Mathf.Sign(horizontalInput);
+    }
+
+    private void UpdateDash()
+    {
+        animTimer += Time.fixedDeltaTime;
+
+       
+        float normalizedTime = animTimer / dashDuration;
+
+        float curveValue = curve.Evaluate(normalizedTime);
+        float dashVelocity = dashDirection * dashPower * curveValue;
+
+        rig.velocity = new Vector2(dashVelocity, 0f);
+
+        if (animTimer >= dashDuration)
+        {
+            duringDash = false;
+            animTimer = 0f;
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            onGround = true;
+        }
     }
 }
